@@ -87,16 +87,16 @@ renderBlock P.Null =
     emptyWidget
 
 renderInlines :: [P.Inline] -> Widget n
-renderInlines = vBox . fmap renderLine . processLineBreaks
+renderInlines = vBox . fmap renderLine . processHardLineBreaks
 
 renderLine :: [P.Inline] -> Widget n
 renderLine = hBox . fmap renderInline
 
-processLineBreaks :: [P.Inline] -> [[P.Inline]]
-processLineBreaks [] = []
-processLineBreaks is =
-    let (a, b) = span (not . isLineBreak) is
-    in a : processLineBreaks (dropWhile isLineBreak b)
+processHardLineBreaks :: [P.Inline] -> [[P.Inline]]
+processHardLineBreaks [] = []
+processHardLineBreaks is =
+    let (a, b) = span (not . isHardLineBreak) is
+    in a : processHardLineBreaks (dropWhile isHardLineBreak b)
 
 renderInline :: P.Inline -> Widget n
 renderInline (P.Str t) =
@@ -104,7 +104,7 @@ renderInline (P.Str t) =
 renderInline P.Space =
     txt " "
 renderInline P.SoftBreak =
-    emptyWidget
+    txt " "
 renderInline P.LineBreak =
     emptyWidget
 renderInline (P.Emph is) =
@@ -145,7 +145,6 @@ renderInline (P.Note bs) =
 renderInline (P.Span _attr is) =
     renderInlines is
 
-isLineBreak :: P.Inline -> Bool
-isLineBreak P.SoftBreak = True
-isLineBreak P.LineBreak = True
-isLineBreak _ = False
+isHardLineBreak :: P.Inline -> Bool
+isHardLineBreak P.LineBreak = True
+isHardLineBreak _ = False
