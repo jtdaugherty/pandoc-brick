@@ -71,7 +71,6 @@ renderPandoc cfg bs =
 
 renderBlocks :: [P.Block] -> M (Widget n)
 renderBlocks [] = return emptyWidget
-renderBlocks [b] = renderBlock b
 renderBlocks (b:bs) = do
     b' <- renderBlock b
     bs' <- mapM renderBlock bs
