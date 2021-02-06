@@ -36,7 +36,7 @@ renderBlock (P.Header _lvl _attr is) =
     renderLine is
 -- renderBlock (P.Table attr caption colSpecs head bodyList foot) =
 --     emptyWidget
-renderBlock (P.Div _ bs) =
+renderBlock (P.Div _attr bs) =
     vBox $ renderBlock <$> bs
 renderBlock P.HorizontalRule =
     hBorder
