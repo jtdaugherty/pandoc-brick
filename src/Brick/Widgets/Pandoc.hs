@@ -181,8 +181,9 @@ renderInline (P.Code _attr t) =
     withDefAttr pandocInlineCodeAttr $ txt t
 renderInline (P.Math mathTy text) =
     txt "TODO: math"
-renderInline (P.RawInline fmt text) =
-    txt "TODO: raw inline"
+renderInline (P.RawInline (P.Format fmt) t) =
+    withDefAttr pandocInlineCodeAttr $
+    txt $ "[" <> fmt <> "] " <> t
 renderInline (P.Link _attr is target) =
     txt "TODO: link"
 renderInline (P.Image _attr is target) =
