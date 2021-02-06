@@ -33,4 +33,9 @@ executable pandoc-brick-demo
     default-language: Haskell2010
     build-depends:    base >= 4.14.1.0
                     , pandoc-brick
+                    , pandoc-types
+                    , vty
                     , brick
+                    , text
+                    , commonmark
+                    , commonmark-pandoc
