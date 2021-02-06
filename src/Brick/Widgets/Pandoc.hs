@@ -116,7 +116,7 @@ renderBlock (P.DefinitionList [(is, bss)]) =
     return $ txt "TODO: def list"
 renderBlock (P.Header _lvl _attr is) = do
     wrap <- asks wrapLongLines
-    return $ withDefAttr pandocHeaderAttr $ renderLine wrap is
+    return $ renderLine wrap (withDefAttr pandocHeaderAttr) is
 renderBlock (P.Table attr caption colSpecs head bodyList foot) =
     return $ txt "TODO: tables"
 renderBlock (P.Div _attr bs) =
@@ -131,21 +131,21 @@ renderInlines soft wrap is =
     let theLines = breakLines $ if soft
                                 then is
                                 else convertSoftLineBreak <$> is
-    in vBox $ renderLine wrap <$> theLines
+    in vBox $ renderLine wrap id <$> theLines
 
 convertSoftLineBreak :: P.Inline -> P.Inline
 convertSoftLineBreak P.SoftBreak = P.Space
 convertSoftLineBreak i = i
 
-renderLine :: Bool -> [P.Inline] -> Widget n
-renderLine wrap is =
+renderLine :: Bool -> (Widget n -> Widget n) -> [P.Inline] -> Widget n
+renderLine wrap formatLine is =
     Widget Fixed Fixed $ do
         ctx <- getContext
         let w = availWidth ctx
             maybeWrap = if wrap
                         then wrapInlines w
                         else (:[])
-        render $ vBox $ (hBox . fmap renderInline) <$> maybeWrap is
+        render $ vBox $ (formatLine . hBox . fmap renderInline) <$> maybeWrap is
 
 breakLines :: [P.Inline] -> [[P.Inline]]
 breakLines [] = []
