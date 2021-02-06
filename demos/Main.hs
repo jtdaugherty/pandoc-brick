@@ -41,6 +41,9 @@ draw bs =
     [viewport () Vertical $ cached () $ renderPandoc renderConfig bs]
 
 handleEvent :: s -> BrickEvent () e -> EventM () (Next s)
+handleEvent s (VtyEvent (V.EvResize {})) = do
+    invalidateCache
+    continue s
 handleEvent s (VtyEvent e) = do
     let vp = viewportScroll ()
     vty <- getVtyHandle
