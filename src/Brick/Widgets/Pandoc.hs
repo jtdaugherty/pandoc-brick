@@ -8,6 +8,7 @@ module Brick.Widgets.Pandoc
   , pandocUnderlineAttr
   , pandocStrongAttr
   , pandocStrikeoutAttr
+  , pandocInlineCodeAttr
   )
 where
 
@@ -35,34 +36,39 @@ pandocStrongAttr = pandocAttr <> "strong"
 pandocStrikeoutAttr :: AttrName
 pandocStrikeoutAttr = pandocAttr <> "strikeout"
 
+pandocInlineCodeAttr :: AttrName
+pandocInlineCodeAttr = pandocAttr <> "inlineCode"
+
 -------------------------------------------------
 
 renderPandoc :: P.Blocks -> Widget n
-renderPandoc = vBox . F.toList . fmap renderBlock . P.unMany
+renderPandoc =
+    withDefAttr pandocAttr .
+    vBox . F.toList . fmap renderBlock . P.unMany
 
 renderBlock :: P.Block -> Widget n
 renderBlock (P.Plain is) =
     renderInlines is
 renderBlock (P.Para is) =
     renderInlines is
--- renderBlock (P.LineBlock iss) =
---     emptyWidget
--- renderBlock (P.CodeBlock attr body) =
---     emptyWidget
--- renderBlock (P.RawBlock fmt body) =
---     emptyWidget
--- renderBlock (P.BlockQuote bs) =
---     emptyWidget
--- renderBlock (P.OrderedList attrs bss) =
---     emptyWidget
--- renderBlock (P.BulletList bss) =
---     emptyWidget
--- renderBlock (P.DefinitionList [(is, bss)]) =
---     emptyWidget
+renderBlock (P.LineBlock iss) =
+    txt "TODO: line block"
+renderBlock (P.CodeBlock attr body) =
+    txt "TODO: code block"
+renderBlock (P.RawBlock fmt body) =
+    txt "TODO: raw block"
+renderBlock (P.BlockQuote bs) =
+    txt "TODO: block quote"
+renderBlock (P.OrderedList attrs bss) =
+    txt "TODO: ordered list"
+renderBlock (P.BulletList bss) =
+    txt "TODO: bullet list"
+renderBlock (P.DefinitionList [(is, bss)]) =
+    txt "TODO: def list"
 renderBlock (P.Header _lvl _attr is) =
     renderLine is
--- renderBlock (P.Table attr caption colSpecs head bodyList foot) =
---     emptyWidget
+renderBlock (P.Table attr caption colSpecs head bodyList foot) =
+    txt "TODO: tables"
 renderBlock (P.Div _attr bs) =
     vBox $ renderBlock <$> bs
 renderBlock P.HorizontalRule =
@@ -103,17 +109,29 @@ renderInline (P.Strong is) =
 renderInline (P.Strikeout is) =
     withDefAttr pandocStrikeoutAttr $
     renderInlines is
--- renderInline (P.Superscript is) =
--- renderInline (P.Subscript is) =
--- renderInline (P.SmallCaps is) =
--- renderInline (P.Quoted QuoteType is) =
--- renderInline (P.Cite [Citation]  is) =
--- renderInline (P.Code Attr Text) =
--- renderInline (P.Math MathType Text) =
--- renderInline (P.RawInline Format Text) =
--- renderInline (P.Link Attr is Target) =
--- renderInline (P.Image Attr is Target) =
--- renderInline (P.Note bs) =
+renderInline (P.Superscript is) =
+    txt "TODO: superscript"
+renderInline (P.Subscript is) =
+    txt "TODO: subscript"
+renderInline (P.SmallCaps is) =
+    txt "TODO: small caps"
+renderInline (P.Quoted _quotTy is) =
+    txt "TODO: quoted"
+renderInline (P.Cite citations  is) =
+    txt "TODO: cite"
+renderInline (P.Code _attr t) =
+    withDefAttr pandocInlineCodeAttr $
+    txt t
+renderInline (P.Math mathTy text) =
+    txt "TODO: math"
+renderInline (P.RawInline fmt text) =
+    txt "TODO: raw inline"
+renderInline (P.Link _attr is target) =
+    txt "TODO: link"
+renderInline (P.Image _attr is target) =
+    txt "TODO: image"
+renderInline (P.Note bs) =
+    txt "TODO: note"
 renderInline (P.Span _attr is) =
     renderInlines is
 
