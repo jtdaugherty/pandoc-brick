@@ -1,0 +1,36 @@
+cabal-version:      2.2
+name:               pandoc-brick
+version:            0.1
+synopsis:           Brick rendering support for Pandoc ASTs
+Homepage:           https://github.com/jtdaugherty/pandoc-brick/
+Bug-reports:        https://github.com/jtdaugherty/pandoc-brick/issues
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             Jonathan Daugherty
+maintainer:         cygnus@foobox.com
+copyright:          (c) 2021 Jonathan Daugherty
+category:           Graphics
+extra-source-files: CHANGELOG.md
+
+Source-Repository head
+  type:     git
+  location: git://github.com/jtdaugherty/pandoc-brick.git
+
+library
+    exposed-modules:  Brick.Widgets.Pandoc
+    hs-source-dirs:   src
+    ghc-options:      -Wall
+    default-language: Haskell2010
+    build-depends:    base >= 4.14.1.0
+                    , brick
+                    , text
+                    , pandoc-types
+
+executable pandoc-brick-demo
+    main-is:          Main.hs
+    hs-source-dirs:   demos
+    ghc-options:      -threaded -Wall
+    default-language: Haskell2010
+    build-depends:    base >= 4.14.1.0
+                    , pandoc-brick
+                    , brick
