@@ -4,6 +4,7 @@ module Main where
 import Brick
 import Brick.Widgets.Pandoc
 import Control.Monad (void)
+import Control.Monad.Trans (liftIO)
 import qualified Data.Text.IO as T
 import qualified Graphics.Vty as V
 import System.Exit (exitFailure)
@@ -39,11 +40,28 @@ draw :: Blocks -> [Widget ()]
 draw bs =
     [viewport () Vertical $ cached () $ renderPandoc renderConfig bs]
 
+handleEvent :: s -> BrickEvent () e -> EventM () (Next s)
+handleEvent s (VtyEvent e) = do
+    let vp = viewportScroll ()
+    vty <- getVtyHandle
+    (_, pageSize) <- liftIO $ V.displayBounds $ V.outputIface vty
+    case e of
+        V.EvKey V.KEsc [] -> halt s
+        V.EvKey (V.KChar 'q') [] -> halt s
+        V.EvKey V.KUp [] -> vScrollBy vp (-1) >> continue s
+        V.EvKey V.KDown [] -> vScrollBy vp 1 >> continue s
+        V.EvKey V.KPageUp [] -> vScrollBy vp (-1 * pageSize) >> continue s
+        V.EvKey V.KPageDown [] -> vScrollBy vp pageSize >> continue s
+        V.EvKey V.KHome [] -> vScrollToBeginning vp >> continue s
+        V.EvKey V.KEnd [] -> vScrollToEnd vp >> continue s
+        _ -> continue s
+handleEvent s _ = continue s
+
 app :: App Blocks e ()
 app =
     App { appDraw = draw
         , appChooseCursor = showFirstCursor
-        , appHandleEvent = resizeOrQuit
+        , appHandleEvent = handleEvent
         , appStartEvent = return
         , appAttrMap = const theme
         }
