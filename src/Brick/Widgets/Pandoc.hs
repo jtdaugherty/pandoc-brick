@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE MultiWayIf #-}
 module Brick.Widgets.Pandoc
   ( renderPandoc
   , PandocRenderConfig(..)
@@ -18,18 +19,21 @@ where
 import Brick
 import Brick.Widgets.Border
 import Control.Monad.Reader
+import Data.List (splitAt)
 import qualified Data.Text as T
 import qualified Data.Foldable as F
 import qualified Text.Pandoc.Builder as P
 
 data PandocRenderConfig =
     PandocRenderConfig { respectSoftLineBreaks :: Bool
+                       , wrapLongLines :: Bool
                        }
     deriving (Show, Read, Eq)
 
 defaultPandocRenderConfig :: PandocRenderConfig
 defaultPandocRenderConfig =
     PandocRenderConfig { respectSoftLineBreaks = False
+                       , wrapLongLines = False
                        }
 
 -------------------------------------------------
@@ -76,11 +80,17 @@ renderBlocks (b:bs) = do
     bs' <- mapM renderBlock bs
     return $ vBox $ b' : (padTop (Pad 1) <$> bs')
 
+renderInlinesM :: [P.Inline] -> M (Widget n)
+renderInlinesM is =
+    renderInlines <$> (asks respectSoftLineBreaks)
+                  <*> (asks wrapLongLines)
+                  <*> (pure is)
+
 renderBlock :: P.Block -> M (Widget n)
-renderBlock (P.Plain is) =
-    renderInlines is
-renderBlock (P.Para is) =
-    renderInlines is
+renderBlock (P.Plain is) = do
+    renderInlinesM is
+renderBlock (P.Para is) = do
+    renderInlinesM is
 renderBlock (P.LineBlock iss) =
     return $ txt "TODO: line block"
 renderBlock (P.CodeBlock _attr body) =
@@ -95,8 +105,9 @@ renderBlock (P.BulletList bss) =
     return $ txt "TODO: bullet list"
 renderBlock (P.DefinitionList [(is, bss)]) =
     return $ txt "TODO: def list"
-renderBlock (P.Header _lvl _attr is) =
-    withDefAttr pandocHeaderAttr <$> renderLine is
+renderBlock (P.Header _lvl _attr is) = do
+    wrap <- asks wrapLongLines
+    return $ withDefAttr pandocHeaderAttr $ renderLine wrap is
 renderBlock (P.Table attr caption colSpecs head bodyList foot) =
     return $ txt "TODO: tables"
 renderBlock (P.Div _attr bs) =
@@ -106,63 +117,127 @@ renderBlock P.HorizontalRule =
 renderBlock P.Null =
     return emptyWidget
 
-renderInlines :: [P.Inline] -> M (Widget n)
-renderInlines is = do
-    theLines <- processLineBreaks is
-    vBox <$> mapM renderLine theLines
+renderInlines :: Bool -> Bool -> [P.Inline] -> Widget n
+renderInlines soft wrap is =
+    let theLines = breakLines $ if soft
+                                then is
+                                else convertSoftLineBreak <$> is
+    in vBox $ renderLine wrap <$> theLines
 
-renderLine :: [P.Inline] -> M (Widget n)
-renderLine is = hBox <$> mapM renderInline is
+convertSoftLineBreak :: P.Inline -> P.Inline
+convertSoftLineBreak P.SoftBreak = P.Space
+convertSoftLineBreak i = i
 
-processLineBreaks :: [P.Inline] -> M [[P.Inline]]
-processLineBreaks [] = return []
-processLineBreaks is = do
-    soft <- asks respectSoftLineBreaks
+renderLine :: Bool -> [P.Inline] -> Widget n
+renderLine wrap is =
+    Widget Fixed Fixed $ do
+        ctx <- getContext
+        let w = availWidth ctx
+            maybeWrap = if wrap
+                        then wrapInlines w
+                        else (:[])
+        render $ vBox $ (hBox . fmap renderInline) <$> maybeWrap is
+
+breakLines :: [P.Inline] -> [[P.Inline]]
+breakLines [] = []
+breakLines is =
     let (a, b) = span (not . isLineBreak) is
-        isLineBreak P.LineBreak = True
-        isLineBreak P.SoftBreak | soft = True
-        isLineBreak _ = False
-    rest <- processLineBreaks (dropWhile isLineBreak b)
-    return $ a : rest
+        rest = breakLines (dropWhile isLineBreak b)
+    in a : rest
 
-renderInline :: P.Inline -> M (Widget n)
+renderInline :: P.Inline -> Widget n
 renderInline (P.Str t) =
-    return $ txt t
+    txt t
 renderInline P.Space =
-    return $ txt " "
+    txt " "
 renderInline P.SoftBreak =
-    return $ txt " "
+    emptyWidget
 renderInline P.LineBreak =
-    return emptyWidget
+    emptyWidget
 renderInline (P.Emph is) =
-    withDefAttr pandocEmphAttr <$> renderInlines is
+    withDefAttr pandocEmphAttr $ renderInlines False False is
 renderInline (P.Underline is) =
-    withDefAttr pandocUnderlineAttr <$> renderInlines is
+    withDefAttr pandocUnderlineAttr $ renderInlines False False is
 renderInline (P.Strong is) =
-    withDefAttr pandocStrongAttr <$> renderInlines is
+    withDefAttr pandocStrongAttr $ renderInlines False False is
 renderInline (P.Strikeout is) =
-    withDefAttr pandocStrikeoutAttr <$> renderInlines is
+    withDefAttr pandocStrikeoutAttr $ renderInlines False False is
 renderInline (P.Superscript is) =
-    return $ txt "TODO: superscript"
+    txt "TODO: superscript"
 renderInline (P.Subscript is) =
-    return $ txt "TODO: subscript"
+    txt "TODO: subscript"
 renderInline (P.SmallCaps is) =
-    return $ txt "TODO: small caps"
+    txt "TODO: small caps"
 renderInline (P.Quoted _quotTy is) =
-    return $ txt "TODO: quoted"
+    txt "TODO: quoted"
 renderInline (P.Cite citations  is) =
-    return $ txt "TODO: cite"
+    txt "TODO: cite"
 renderInline (P.Code _attr t) =
-    return $ withDefAttr pandocInlineCodeAttr $ txt t
+    withDefAttr pandocInlineCodeAttr $ txt t
 renderInline (P.Math mathTy text) =
-    return $ txt "TODO: math"
+    txt "TODO: math"
 renderInline (P.RawInline fmt text) =
-    return $ txt "TODO: raw inline"
+    txt "TODO: raw inline"
 renderInline (P.Link _attr is target) =
-    return $ txt "TODO: link"
+    txt "TODO: link"
 renderInline (P.Image _attr is target) =
-    return $ txt "TODO: image"
+    txt "TODO: image"
 renderInline (P.Note bs) =
-    return $ txt "TODO: note"
+    txt "TODO: note"
 renderInline (P.Span _attr is) =
-    renderInlines is
+    renderInlines False False is
+
+wrapInlines :: Int -> [P.Inline] -> [[P.Inline]]
+wrapInlines _ [] = []
+wrapInlines width (i:rest) | inlineWidth i > width =
+    -- If the line starts with a token that is larger than the allowed
+    -- width, just leave it on its own line.
+    [i] : wrapInlines width rest
+wrapInlines width inlines =
+    let go _ [] = 0
+        go w (i:is) =
+            let iWidth = inlineWidth i
+            in if | iWidth < w  -> 1 + go (w - iWidth) is
+                  | iWidth == w -> 1
+                  | otherwise   -> 0
+        curLineCount = go width inlines
+        (curLine, rest) = splitAt curLineCount inlines
+    in curLine : wrapInlines width (dropWhile isSpace rest)
+
+isSpace :: P.Inline -> Bool
+isSpace P.Space = True
+isSpace _ = False
+
+isLineBreak :: P.Inline -> Bool
+isLineBreak P.LineBreak = True
+isLineBreak P.SoftBreak = True
+isLineBreak _ = False
+
+inlineWidth :: P.Inline -> Int
+inlineWidth P.Space                    = 1
+inlineWidth P.SoftBreak                = 0
+inlineWidth P.LineBreak                = 0
+inlineWidth (P.Code _ t)               = textWidth t
+inlineWidth (P.Math _ t)               = textWidth t
+inlineWidth (P.RawInline _ t)          = textWidth t
+inlineWidth (P.Str t)                  = textWidth t
+inlineWidth (P.Link _ _ (url, ""))     = textWidth url
+inlineWidth (P.Image _ _ (url, ""))    = textWidth url
+inlineWidth (P.Link _ _ (url, title))  = textWidth title
+inlineWidth (P.Image _ _ (url, title)) = textWidth title
+inlineWidth (P.Emph is)                = sum $ inlineWidth <$> is
+inlineWidth (P.Underline is)           = sum $ inlineWidth <$> is
+inlineWidth (P.Strong is)              = sum $ inlineWidth <$> is
+inlineWidth (P.Strikeout is)           = sum $ inlineWidth <$> is
+inlineWidth (P.Superscript is)         = sum $ inlineWidth <$> is
+inlineWidth (P.Subscript is)           = sum $ inlineWidth <$> is
+inlineWidth (P.SmallCaps is)           = sum $ inlineWidth <$> is
+inlineWidth (P.Quoted _ is)            = sum $ inlineWidth <$> is
+inlineWidth (P.Span _ is)              = sum $ inlineWidth <$> is
+-- I'm not sure how these should be visually represented, so for now I'm
+-- not going to bother to compute the width.
+inlineWidth (P.Cite _ _)               = 0
+-- It's weird to compute the width of a block sequence, so I am not
+-- going to bother. I am not yet sure how/when this kind of node would
+-- even get created.
+inlineWidth (P.Note _)                 = 0
