@@ -65,9 +65,17 @@ type M a = Reader PandocRenderConfig a
 
 renderPandoc :: PandocRenderConfig -> P.Blocks -> Widget n
 renderPandoc cfg bs =
-    withDefAttr pandocAttr $ vBox $ F.toList results
+    withDefAttr pandocAttr result
     where
-        results = runReader (mapM renderBlock $ P.unMany bs) cfg
+        result = runReader (renderBlocks $ F.toList $ P.unMany bs) cfg
+
+renderBlocks :: [P.Block] -> M (Widget n)
+renderBlocks [] = return emptyWidget
+renderBlocks [b] = renderBlock b
+renderBlocks (b:bs) = do
+    b' <- renderBlock b
+    bs' <- mapM renderBlock bs
+    return $ vBox $ b' : (padTop (Pad 1) <$> bs')
 
 renderBlock :: P.Block -> M (Widget n)
 renderBlock (P.Plain is) =
