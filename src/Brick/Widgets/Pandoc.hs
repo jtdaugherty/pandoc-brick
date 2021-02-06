@@ -26,7 +26,12 @@ import qualified Text.Pandoc.Builder as P
 
 data PandocRenderConfig =
     PandocRenderConfig { respectSoftLineBreaks :: Bool
+                       -- ^ Whether soft line breaks will be honored. If
+                       -- 'True', soft line breaks will behave like hard
+                       -- line breaks. If 'False', soft line breaks will
+                       -- be converted to spaces.
                        , wrapLongLines :: Bool
+                       -- ^ Whether to wrap long lines and headers.
                        }
     deriving (Show, Read, Eq)
 
