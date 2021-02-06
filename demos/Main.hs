@@ -29,6 +29,7 @@ theme =
     , (pandocInlineCodeAttr, fg V.magenta)
     , (pandocCodeBlockAttr,  fg V.magenta)
     , (pandocHeaderAttr,     fg V.white `V.withStyle` V.bold `V.withStyle` V.underline)
+    , (pandocLinkAttr,       fg V.yellow)
     ]
 
 renderConfig :: PandocRenderConfig

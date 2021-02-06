@@ -13,6 +13,7 @@ module Brick.Widgets.Pandoc
   , pandocInlineCodeAttr
   , pandocCodeBlockAttr
   , pandocHeaderAttr
+  , pandocLinkAttr
   )
 where
 
@@ -67,6 +68,9 @@ pandocCodeBlockAttr = pandocAttr <> "codeBlock"
 
 pandocHeaderAttr :: AttrName
 pandocHeaderAttr = pandocAttr <> "header"
+
+pandocLinkAttr :: AttrName
+pandocLinkAttr = pandocAttr <> "link"
 
 -------------------------------------------------
 
@@ -187,10 +191,16 @@ renderInline (P.Math mathTy text) =
 renderInline (P.RawInline (P.Format fmt) t) =
     withDefAttr pandocInlineCodeAttr $
     txt $ "[" <> fmt <> "] " <> t
-renderInline (P.Link _attr is target) =
-    txt "TODO: link"
-renderInline (P.Image _attr is target) =
-    txt "TODO: image"
+renderInline (P.Link _attr _ (url, label)) =
+    withDefAttr pandocLinkAttr $
+    hyperlink url $
+    txt $
+    if T.null label then url else label
+renderInline (P.Image _attr _ (url, label)) =
+    withDefAttr pandocLinkAttr $
+    hyperlink url $
+    txt $
+    if T.null label then url else label
 renderInline (P.Note bs) =
     txt "TODO: note"
 renderInline (P.Span _attr is) =
