@@ -55,11 +55,6 @@ processLineBreaks is =
     let (a, b) = span (not . isLineBreak) is
     in a : processLineBreaks (dropWhile isLineBreak b)
 
-isLineBreak :: P.Inline -> Bool
-isLineBreak P.SoftBreak = True
-isLineBreak P.LineBreak = True
-isLineBreak _ = False
-
 renderInline :: P.Inline -> Widget n
 renderInline (P.Str t) =
     txt t
@@ -85,3 +80,8 @@ renderInline P.LineBreak =
 -- renderInline (P.Image Attr is Target) =
 -- renderInline (P.Note bs) =
 -- renderInline (P.Span Attr is) =
+
+isLineBreak :: P.Inline -> Bool
+isLineBreak P.SoftBreak = True
+isLineBreak P.LineBreak = True
+isLineBreak _ = False
