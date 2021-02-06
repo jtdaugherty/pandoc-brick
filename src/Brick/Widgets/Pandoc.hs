@@ -79,7 +79,8 @@ renderInline P.LineBreak =
 -- renderInline (P.Link Attr is Target) =
 -- renderInline (P.Image Attr is Target) =
 -- renderInline (P.Note bs) =
--- renderInline (P.Span Attr is) =
+renderInline (P.Span _attr is) =
+    renderInlines is
 
 isLineBreak :: P.Inline -> Bool
 isLineBreak P.SoftBreak = True
