@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Brick.Widgets.Pandoc
   ( renderPandoc
   )
