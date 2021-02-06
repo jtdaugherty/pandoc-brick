@@ -24,6 +24,7 @@ library
     build-depends:    base >= 4.14.1.0
                     , brick
                     , text
+                    , mtl
                     , pandoc-types
 
 executable pandoc-brick-demo

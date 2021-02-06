@@ -30,9 +30,14 @@ theme =
     , (pandocHeaderAttr,     fg V.white `V.withStyle` V.bold `V.withStyle` V.underline)
     ]
 
+renderConfig :: PandocRenderConfig
+renderConfig =
+    PandocRenderConfig { respectSoftLineBreaks = True
+                       }
+
 draw :: Blocks -> [Widget ()]
 draw bs =
-    [viewport () Vertical $ cached () $ renderPandoc bs]
+    [viewport () Vertical $ cached () $ renderPandoc renderConfig bs]
 
 app :: App Blocks e ()
 app =

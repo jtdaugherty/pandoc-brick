@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Brick.Widgets.Pandoc
   ( renderPandoc
+  , PandocRenderConfig(..)
 
   -- * Attributes
   , pandocAttr
@@ -16,9 +17,20 @@ where
 
 import Brick
 import Brick.Widgets.Border
+import Control.Monad.Reader
 import qualified Data.Text as T
 import qualified Data.Foldable as F
 import qualified Text.Pandoc.Builder as P
+
+data PandocRenderConfig =
+    PandocRenderConfig { respectSoftLineBreaks :: Bool
+                       }
+    deriving (Show, Read, Eq)
+
+defaultPandocRenderConfig :: PandocRenderConfig
+defaultPandocRenderConfig =
+    PandocRenderConfig { respectSoftLineBreaks = False
+                       }
 
 -------------------------------------------------
 -- Attributes
@@ -49,102 +61,101 @@ pandocHeaderAttr = pandocAttr <> "header"
 
 -------------------------------------------------
 
-renderPandoc :: P.Blocks -> Widget n
-renderPandoc =
-    withDefAttr pandocAttr .
-    vBox . F.toList . fmap renderBlock . P.unMany
+type M a = Reader PandocRenderConfig a
 
-renderBlock :: P.Block -> Widget n
+renderPandoc :: PandocRenderConfig -> P.Blocks -> Widget n
+renderPandoc cfg bs =
+    withDefAttr pandocAttr $ vBox $ F.toList results
+    where
+        results = runReader (mapM renderBlock $ P.unMany bs) cfg
+
+renderBlock :: P.Block -> M (Widget n)
 renderBlock (P.Plain is) =
     renderInlines is
 renderBlock (P.Para is) =
     renderInlines is
 renderBlock (P.LineBlock iss) =
-    txt "TODO: line block"
+    return $ txt "TODO: line block"
 renderBlock (P.CodeBlock _attr body) =
-    withDefAttr pandocCodeBlockAttr $
-    txt body
+    return $ withDefAttr pandocCodeBlockAttr $ txt body
 renderBlock (P.RawBlock fmt body) =
-    txt "TODO: raw block"
+    return $ txt "TODO: raw block"
 renderBlock (P.BlockQuote bs) =
-    txt "TODO: block quote"
+    return $ txt "TODO: block quote"
 renderBlock (P.OrderedList attrs bss) =
-    txt "TODO: ordered list"
+    return $ txt "TODO: ordered list"
 renderBlock (P.BulletList bss) =
-    txt "TODO: bullet list"
+    return $ txt "TODO: bullet list"
 renderBlock (P.DefinitionList [(is, bss)]) =
-    txt "TODO: def list"
+    return $ txt "TODO: def list"
 renderBlock (P.Header _lvl _attr is) =
-    withDefAttr pandocHeaderAttr $
-    renderLine is
+    withDefAttr pandocHeaderAttr <$> renderLine is
 renderBlock (P.Table attr caption colSpecs head bodyList foot) =
-    txt "TODO: tables"
+    return $ txt "TODO: tables"
 renderBlock (P.Div _attr bs) =
-    vBox $ renderBlock <$> bs
+    vBox <$> mapM renderBlock bs
 renderBlock P.HorizontalRule =
-    hBorder
+    return hBorder
 renderBlock P.Null =
-    emptyWidget
+    return emptyWidget
 
-renderInlines :: [P.Inline] -> Widget n
-renderInlines = vBox . fmap renderLine . processHardLineBreaks
+renderInlines :: [P.Inline] -> M (Widget n)
+renderInlines is = do
+    theLines <- processLineBreaks is
+    vBox <$> mapM renderLine theLines
 
-renderLine :: [P.Inline] -> Widget n
-renderLine = hBox . fmap renderInline
+renderLine :: [P.Inline] -> M (Widget n)
+renderLine is = hBox <$> mapM renderInline is
 
-processHardLineBreaks :: [P.Inline] -> [[P.Inline]]
-processHardLineBreaks [] = []
-processHardLineBreaks is =
-    let (a, b) = span (not . isHardLineBreak) is
-    in a : processHardLineBreaks (dropWhile isHardLineBreak b)
+processLineBreaks :: [P.Inline] -> M [[P.Inline]]
+processLineBreaks [] = return []
+processLineBreaks is = do
+    soft <- asks respectSoftLineBreaks
+    let (a, b) = span (not . isLineBreak) is
+        isLineBreak P.LineBreak = True
+        isLineBreak P.SoftBreak | soft = True
+        isLineBreak _ = False
+    rest <- processLineBreaks (dropWhile isLineBreak b)
+    return $ a : rest
 
-renderInline :: P.Inline -> Widget n
+renderInline :: P.Inline -> M (Widget n)
 renderInline (P.Str t) =
-    txt t
+    return $ txt t
 renderInline P.Space =
-    txt " "
+    return $ txt " "
 renderInline P.SoftBreak =
-    txt " "
+    return $ txt " "
 renderInline P.LineBreak =
-    emptyWidget
+    return emptyWidget
 renderInline (P.Emph is) =
-    withDefAttr pandocEmphAttr $
-    renderInlines is
+    withDefAttr pandocEmphAttr <$> renderInlines is
 renderInline (P.Underline is) =
-    withDefAttr pandocUnderlineAttr $
-    renderInlines is
+    withDefAttr pandocUnderlineAttr <$> renderInlines is
 renderInline (P.Strong is) =
-    withDefAttr pandocStrongAttr $
-    renderInlines is
+    withDefAttr pandocStrongAttr <$> renderInlines is
 renderInline (P.Strikeout is) =
-    withDefAttr pandocStrikeoutAttr $
-    renderInlines is
+    withDefAttr pandocStrikeoutAttr <$> renderInlines is
 renderInline (P.Superscript is) =
-    txt "TODO: superscript"
+    return $ txt "TODO: superscript"
 renderInline (P.Subscript is) =
-    txt "TODO: subscript"
+    return $ txt "TODO: subscript"
 renderInline (P.SmallCaps is) =
-    txt "TODO: small caps"
+    return $ txt "TODO: small caps"
 renderInline (P.Quoted _quotTy is) =
-    txt "TODO: quoted"
+    return $ txt "TODO: quoted"
 renderInline (P.Cite citations  is) =
-    txt "TODO: cite"
+    return $ txt "TODO: cite"
 renderInline (P.Code _attr t) =
-    withDefAttr pandocInlineCodeAttr $
-    txt t
+    return $ withDefAttr pandocInlineCodeAttr $ txt t
 renderInline (P.Math mathTy text) =
-    txt "TODO: math"
+    return $ txt "TODO: math"
 renderInline (P.RawInline fmt text) =
-    txt "TODO: raw inline"
+    return $ txt "TODO: raw inline"
 renderInline (P.Link _attr is target) =
-    txt "TODO: link"
+    return $ txt "TODO: link"
 renderInline (P.Image _attr is target) =
-    txt "TODO: image"
+    return $ txt "TODO: image"
 renderInline (P.Note bs) =
-    txt "TODO: note"
+    return $ txt "TODO: note"
 renderInline (P.Span _attr is) =
     renderInlines is
-
-isHardLineBreak :: P.Inline -> Bool
-isHardLineBreak P.LineBreak = True
-isHardLineBreak _ = False
