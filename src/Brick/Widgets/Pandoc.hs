@@ -168,9 +168,9 @@ renderInline (P.Strong is) =
 renderInline (P.Strikeout is) =
     withDefAttr pandocStrikeoutAttr $ renderInlines False False is
 renderInline (P.Superscript is) =
-    txt "TODO: superscript"
+    renderInlines False False $ P.Str "(" : (is <> [P.Str ")"])
 renderInline (P.Subscript is) =
-    txt "TODO: subscript"
+    renderInlines False False $ P.Str "(" : (is <> [P.Str ")"])
 renderInline (P.SmallCaps is) =
     txt "TODO: small caps"
 renderInline (P.Quoted _quotTy is) =
