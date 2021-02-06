@@ -26,6 +26,7 @@ theme =
     , (pandocStrongAttr,     V.defAttr `V.withStyle` V.bold)
     , (pandocStrikeoutAttr,  V.defAttr `V.withStyle` V.strikethrough)
     , (pandocInlineCodeAttr, fg V.magenta)
+    , (pandocCodeBlockAttr,  fg V.magenta)
     ]
 
 draw :: Blocks -> [Widget ()]

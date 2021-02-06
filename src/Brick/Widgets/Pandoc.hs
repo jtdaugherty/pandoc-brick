@@ -9,6 +9,7 @@ module Brick.Widgets.Pandoc
   , pandocStrongAttr
   , pandocStrikeoutAttr
   , pandocInlineCodeAttr
+  , pandocCodeBlockAttr
   )
 where
 
@@ -39,6 +40,9 @@ pandocStrikeoutAttr = pandocAttr <> "strikeout"
 pandocInlineCodeAttr :: AttrName
 pandocInlineCodeAttr = pandocAttr <> "inlineCode"
 
+pandocCodeBlockAttr :: AttrName
+pandocCodeBlockAttr = pandocAttr <> "codeBlock"
+
 -------------------------------------------------
 
 renderPandoc :: P.Blocks -> Widget n
@@ -53,8 +57,9 @@ renderBlock (P.Para is) =
     renderInlines is
 renderBlock (P.LineBlock iss) =
     txt "TODO: line block"
-renderBlock (P.CodeBlock attr body) =
-    txt "TODO: code block"
+renderBlock (P.CodeBlock _attr body) =
+    withDefAttr pandocCodeBlockAttr $
+    txt body
 renderBlock (P.RawBlock fmt body) =
     txt "TODO: raw block"
 renderBlock (P.BlockQuote bs) =
