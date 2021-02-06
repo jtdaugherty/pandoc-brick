@@ -15,9 +15,9 @@ renderPandoc = vBox . F.toList . fmap renderBlock . P.unMany
 
 renderBlock :: P.Block -> Widget n
 renderBlock (P.Plain is) =
-    hBox $ renderInline <$> is
+    renderInlines is
 renderBlock (P.Para is) =
-    hBox $ renderInline <$> is
+    renderInlines is
 -- renderBlock (P.LineBlock iss) =
 --     emptyWidget
 -- renderBlock (P.CodeBlock attr body) =
@@ -32,16 +32,33 @@ renderBlock (P.Para is) =
 --     emptyWidget
 -- renderBlock (P.DefinitionList [(is, bss)]) =
 --     emptyWidget
--- renderBlock (P.Header lvl attr is) =
---     emptyWidget
+renderBlock (P.Header _lvl _attr is) =
+    renderLine is
 -- renderBlock (P.Table attr caption colSpecs head bodyList foot) =
 --     emptyWidget
--- renderBlock (P.Div attr bs) =
---     emptyWidget
+renderBlock (P.Div _ bs) =
+    vBox $ renderBlock <$> bs
 renderBlock P.HorizontalRule =
     hBorder
 renderBlock P.Null =
     emptyWidget
+
+renderInlines :: [P.Inline] -> Widget n
+renderInlines = vBox . fmap renderLine . processLineBreaks
+
+renderLine :: [P.Inline] -> Widget n
+renderLine = hBox . fmap renderInline
+
+processLineBreaks :: [P.Inline] -> [[P.Inline]]
+processLineBreaks [] = []
+processLineBreaks is =
+    let (a, b) = span (not . isLineBreak) is
+    in a : processLineBreaks (dropWhile isLineBreak b)
+
+isLineBreak :: P.Inline -> Bool
+isLineBreak P.SoftBreak = True
+isLineBreak P.LineBreak = True
+isLineBreak _ = False
 
 renderInline :: P.Inline -> Widget n
 renderInline (P.Str t) =
