@@ -1,6 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Brick.Widgets.Pandoc
   ( renderPandoc
+
+  -- * Attributes
+  , pandocAttr
+  , pandocEmphAttr
+  , pandocUnderlineAttr
+  , pandocStrongAttr
+  , pandocStrikeoutAttr
   )
 where
 
@@ -9,6 +16,26 @@ import Brick.Widgets.Border
 import qualified Data.Text as T
 import qualified Data.Foldable as F
 import qualified Text.Pandoc.Builder as P
+
+-------------------------------------------------
+-- Attributes
+
+pandocAttr :: AttrName
+pandocAttr = "pandoc"
+
+pandocEmphAttr :: AttrName
+pandocEmphAttr = pandocAttr <> "emph"
+
+pandocUnderlineAttr :: AttrName
+pandocUnderlineAttr = pandocAttr <> "underline"
+
+pandocStrongAttr :: AttrName
+pandocStrongAttr = pandocAttr <> "strong"
+
+pandocStrikeoutAttr :: AttrName
+pandocStrikeoutAttr = pandocAttr <> "strikeout"
+
+-------------------------------------------------
 
 renderPandoc :: P.Blocks -> Widget n
 renderPandoc = vBox . F.toList . fmap renderBlock . P.unMany
@@ -64,10 +91,18 @@ renderInline P.SoftBreak =
     emptyWidget
 renderInline P.LineBreak =
     emptyWidget
--- renderInline (P.Emph is) =
--- renderInline (P.Underline is) =
--- renderInline (P.Strong is) =
--- renderInline (P.Strikeout is) =
+renderInline (P.Emph is) =
+    withDefAttr pandocEmphAttr $
+    renderInlines is
+renderInline (P.Underline is) =
+    withDefAttr pandocUnderlineAttr $
+    renderInlines is
+renderInline (P.Strong is) =
+    withDefAttr pandocStrongAttr $
+    renderInlines is
+renderInline (P.Strikeout is) =
+    withDefAttr pandocStrikeoutAttr $
+    renderInlines is
 -- renderInline (P.Superscript is) =
 -- renderInline (P.Subscript is) =
 -- renderInline (P.SmallCaps is) =
