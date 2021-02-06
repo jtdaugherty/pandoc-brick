@@ -172,7 +172,7 @@ renderInline (P.Superscript is) =
 renderInline (P.Subscript is) =
     renderInlines False False $ P.Str "(" : (is <> [P.Str ")"])
 renderInline (P.SmallCaps is) =
-    txt "TODO: small caps"
+    renderInlines False False $ capitalizeInline <$> is
 renderInline (P.Quoted _quotTy is) =
     txt "TODO: quoted"
 renderInline (P.Cite citations  is) =
@@ -191,6 +191,35 @@ renderInline (P.Note bs) =
     txt "TODO: note"
 renderInline (P.Span _attr is) =
     renderInlines False False is
+
+capitalizeInline :: P.Inline -> P.Inline
+capitalizeInline (P.Str t) =
+    P.Str $ T.toUpper t
+capitalizeInline (P.RawInline fmt t) =
+    P.RawInline fmt $ T.toUpper t
+capitalizeInline (P.Emph is) =
+    P.Emph $ capitalizeInline <$> is
+capitalizeInline (P.Underline is) =
+    P.Underline $ capitalizeInline <$> is
+capitalizeInline (P.Strong is) =
+    P.Strong $ capitalizeInline <$> is
+capitalizeInline (P.Strikeout is) =
+    P.Strikeout $ capitalizeInline <$> is
+capitalizeInline (P.Superscript is) =
+    P.Superscript $ capitalizeInline <$> is
+capitalizeInline (P.Subscript is) =
+    P.Subscript $ capitalizeInline <$> is
+capitalizeInline (P.SmallCaps is) =
+    P.SmallCaps $ capitalizeInline <$> is
+capitalizeInline (P.Quoted quotTy is) =
+    P.Quoted quotTy $ capitalizeInline <$> is
+capitalizeInline (P.Link attr is (url, title)) =
+    P.Link attr (capitalizeInline <$> is) (url, T.toUpper title)
+capitalizeInline (P.Image attr is (url, title)) =
+    P.Image attr (capitalizeInline <$> is) (url, T.toUpper title)
+capitalizeInline (P.Span attr is) =
+    P.Span attr $ capitalizeInline <$> is
+capitalizeInline i = i
 
 wrapInlines :: Int -> [P.Inline] -> [[P.Inline]]
 wrapInlines _ [] = []
