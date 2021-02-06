@@ -182,12 +182,8 @@ renderInline (P.Quoted quotTy is) =
                 P.SingleQuote -> "'"
                 P.DoubleQuote -> "\""
     in renderInlines False False $ q : (is <> [q])
-renderInline (P.Cite citations  is) =
-    txt "TODO: cite"
 renderInline (P.Code _attr t) =
     withDefAttr pandocInlineCodeAttr $ txt t
-renderInline (P.Math mathTy text) =
-    txt "TODO: math"
 renderInline (P.RawInline (P.Format fmt) t) =
     withDefAttr pandocInlineCodeAttr $
     txt $ "[" <> fmt <> "] " <> t
@@ -201,10 +197,14 @@ renderInline (P.Image _attr _ (url, label)) =
     hyperlink url $
     txt $
     if T.null label then url else label
-renderInline (P.Note bs) =
-    txt "TODO: note"
 renderInline (P.Span _attr is) =
     renderInlines False False is
+renderInline (P.Cite citations is) =
+    txt "TODO: cite"
+renderInline (P.Math mathTy text) =
+    txt "TODO: math"
+renderInline (P.Note bs) =
+    txt "TODO: note"
 
 capitalizeInline :: P.Inline -> P.Inline
 capitalizeInline (P.Str t) =
