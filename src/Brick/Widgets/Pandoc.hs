@@ -249,30 +249,30 @@ isLineBreak P.SoftBreak = True
 isLineBreak _ = False
 
 inlineWidth :: P.Inline -> Int
-inlineWidth P.Space                    = 1
-inlineWidth P.SoftBreak                = 0
-inlineWidth P.LineBreak                = 0
-inlineWidth (P.Code _ t)               = textWidth t
-inlineWidth (P.Math _ t)               = textWidth t
-inlineWidth (P.RawInline _ t)          = textWidth t
-inlineWidth (P.Str t)                  = textWidth t
-inlineWidth (P.Link _ _ (url, ""))     = textWidth url
-inlineWidth (P.Image _ _ (url, ""))    = textWidth url
-inlineWidth (P.Link _ _ (url, title))  = textWidth title
-inlineWidth (P.Image _ _ (url, title)) = textWidth title
-inlineWidth (P.Emph is)                = sum $ inlineWidth <$> is
-inlineWidth (P.Underline is)           = sum $ inlineWidth <$> is
-inlineWidth (P.Strong is)              = sum $ inlineWidth <$> is
-inlineWidth (P.Strikeout is)           = sum $ inlineWidth <$> is
-inlineWidth (P.Superscript is)         = sum $ inlineWidth <$> is
-inlineWidth (P.Subscript is)           = sum $ inlineWidth <$> is
-inlineWidth (P.SmallCaps is)           = sum $ inlineWidth <$> is
-inlineWidth (P.Quoted _ is)            = sum $ inlineWidth <$> is
-inlineWidth (P.Span _ is)              = sum $ inlineWidth <$> is
+inlineWidth P.Space                      = 1
+inlineWidth P.SoftBreak                  = 0
+inlineWidth P.LineBreak                  = 0
+inlineWidth (P.Code _ t)                 = textWidth t
+inlineWidth (P.Math _ t)                 = textWidth t
+inlineWidth (P.RawInline (P.Format f) t) = textWidth f + 3 + textWidth t
+inlineWidth (P.Str t)                    = textWidth t
+inlineWidth (P.Link _ _ (url, ""))       = textWidth url
+inlineWidth (P.Image _ _ (url, ""))      = textWidth url
+inlineWidth (P.Link _ _ (url, title))    = textWidth title
+inlineWidth (P.Image _ _ (url, title))   = textWidth title
+inlineWidth (P.Emph is)                  = sum $ inlineWidth <$> is
+inlineWidth (P.Underline is)             = sum $ inlineWidth <$> is
+inlineWidth (P.Strong is)                = sum $ inlineWidth <$> is
+inlineWidth (P.Strikeout is)             = sum $ inlineWidth <$> is
+inlineWidth (P.Superscript is)           = 2 + (sum $ inlineWidth <$> is)
+inlineWidth (P.Subscript is)             = 2 + (sum $ inlineWidth <$> is)
+inlineWidth (P.SmallCaps is)             = sum $ inlineWidth <$> is
+inlineWidth (P.Quoted _ is)              = sum $ inlineWidth <$> is
+inlineWidth (P.Span _ is)                = sum $ inlineWidth <$> is
 -- I'm not sure how these should be visually represented, so for now I'm
 -- not going to bother to compute the width.
-inlineWidth (P.Cite _ _)               = 0
+inlineWidth (P.Cite _ _)                 = 0
 -- It's weird to compute the width of a block sequence, so I am not
 -- going to bother. I am not yet sure how/when this kind of node would
 -- even get created.
-inlineWidth (P.Note _)                 = 0
+inlineWidth (P.Note _)                   = 0
