@@ -46,14 +46,14 @@ handleEvent s (VtyEvent e) = do
     vty <- getVtyHandle
     (_, pageSize) <- liftIO $ V.displayBounds $ V.outputIface vty
     case e of
-        V.EvKey V.KEsc [] -> halt s
+        V.EvKey V.KEsc []        -> halt s
         V.EvKey (V.KChar 'q') [] -> halt s
-        V.EvKey V.KUp [] -> vScrollBy vp (-1) >> continue s
-        V.EvKey V.KDown [] -> vScrollBy vp 1 >> continue s
-        V.EvKey V.KPageUp [] -> vScrollBy vp (-1 * pageSize) >> continue s
-        V.EvKey V.KPageDown [] -> vScrollBy vp pageSize >> continue s
-        V.EvKey V.KHome [] -> vScrollToBeginning vp >> continue s
-        V.EvKey V.KEnd [] -> vScrollToEnd vp >> continue s
+        V.EvKey V.KUp []         -> vScrollBy vp (-1) >> continue s
+        V.EvKey V.KDown []       -> vScrollBy vp 1 >> continue s
+        V.EvKey V.KPageUp []     -> vScrollBy vp (-1 * pageSize) >> continue s
+        V.EvKey V.KPageDown []   -> vScrollBy vp pageSize >> continue s
+        V.EvKey V.KHome []       -> vScrollToBeginning vp >> continue s
+        V.EvKey V.KEnd []        -> vScrollToEnd vp >> continue s
         _ -> continue s
 handleEvent s _ = continue s
 
