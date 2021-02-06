@@ -66,9 +66,9 @@ renderInline (P.Str t) =
 renderInline P.Space =
     txt " "
 renderInline P.SoftBreak =
-    emptyWidget -- TODO FIXME
+    emptyWidget
 renderInline P.LineBreak =
-    emptyWidget -- TODO FIXME
+    emptyWidget
 -- renderInline (P.Emph is) =
 -- renderInline (P.Underline is) =
 -- renderInline (P.Strong is) =
