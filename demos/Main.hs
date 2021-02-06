@@ -33,7 +33,8 @@ theme =
 
 renderConfig :: PandocRenderConfig
 renderConfig =
-    PandocRenderConfig { respectSoftLineBreaks = True
+    PandocRenderConfig { respectSoftLineBreaks = False
+                       , wrapLongLines = True
                        }
 
 draw :: Blocks -> [Widget ()]
