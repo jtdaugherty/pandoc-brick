@@ -173,8 +173,11 @@ renderInline (P.Subscript is) =
     renderInlines False False $ P.Str "(" : (is <> [P.Str ")"])
 renderInline (P.SmallCaps is) =
     renderInlines False False $ capitalizeInline <$> is
-renderInline (P.Quoted _quotTy is) =
-    txt "TODO: quoted"
+renderInline (P.Quoted quotTy is) =
+    let q = P.Str $ case quotTy of
+                P.SingleQuote -> "'"
+                P.DoubleQuote -> "\""
+    in renderInlines False False $ q : (is <> [q])
 renderInline (P.Cite citations  is) =
     txt "TODO: cite"
 renderInline (P.Code _attr t) =
@@ -267,7 +270,7 @@ inlineWidth (P.Strikeout is)             = sum $ inlineWidth <$> is
 inlineWidth (P.Superscript is)           = 2 + (sum $ inlineWidth <$> is)
 inlineWidth (P.Subscript is)             = 2 + (sum $ inlineWidth <$> is)
 inlineWidth (P.SmallCaps is)             = sum $ inlineWidth <$> is
-inlineWidth (P.Quoted _ is)              = sum $ inlineWidth <$> is
+inlineWidth (P.Quoted _ is)              = 2 + (sum $ inlineWidth <$> is)
 inlineWidth (P.Span _ is)                = sum $ inlineWidth <$> is
 -- I'm not sure how these should be visually represented, so for now I'm
 -- not going to bother to compute the width.
