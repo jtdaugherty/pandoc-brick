@@ -10,6 +10,7 @@ module Brick.Widgets.Pandoc
   , pandocStrikeoutAttr
   , pandocInlineCodeAttr
   , pandocCodeBlockAttr
+  , pandocHeaderAttr
   )
 where
 
@@ -43,6 +44,9 @@ pandocInlineCodeAttr = pandocAttr <> "inlineCode"
 pandocCodeBlockAttr :: AttrName
 pandocCodeBlockAttr = pandocAttr <> "codeBlock"
 
+pandocHeaderAttr :: AttrName
+pandocHeaderAttr = pandocAttr <> "header"
+
 -------------------------------------------------
 
 renderPandoc :: P.Blocks -> Widget n
@@ -71,6 +75,7 @@ renderBlock (P.BulletList bss) =
 renderBlock (P.DefinitionList [(is, bss)]) =
     txt "TODO: def list"
 renderBlock (P.Header _lvl _attr is) =
+    withDefAttr pandocHeaderAttr $
     renderLine is
 renderBlock (P.Table attr caption colSpecs head bodyList foot) =
     txt "TODO: tables"
