@@ -54,7 +54,9 @@ handleEvent s (VtyEvent e) = do
         V.EvKey V.KEsc []        -> halt s
         V.EvKey (V.KChar 'q') [] -> halt s
         V.EvKey V.KUp []         -> vScrollBy vp (-1) >> continue s
+        V.EvKey (V.KChar 'k') [] -> vScrollBy vp (-1) >> continue s
         V.EvKey V.KDown []       -> vScrollBy vp 1 >> continue s
+        V.EvKey (V.KChar 'j') [] -> vScrollBy vp 1 >> continue s
         V.EvKey V.KPageUp []     -> vScrollBy vp (-1 * pageSize) >> continue s
         V.EvKey V.KPageDown []   -> vScrollBy vp pageSize >> continue s
         V.EvKey V.KHome []       -> vScrollToBeginning vp >> continue s
