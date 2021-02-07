@@ -4,7 +4,7 @@ module Main where
 import Brick
 import Brick.Widgets.Pandoc
 import Brick.Widgets.Skylighting (attrMappingsForStyle)
-import Control.Monad (void)
+import Control.Monad (void, when)
 import Control.Monad.Trans (liftIO)
 import Skylighting.Styles (pygments)
 import Skylighting.Loader (loadSyntaxesFromDir)
@@ -12,6 +12,7 @@ import qualified Data.Text.IO as T
 import qualified Graphics.Vty as V
 import System.Exit (exitFailure)
 import System.Environment (getArgs, getProgName)
+import System.Console.GetOpt
 
 import Commonmark (commonmark)
 import Commonmark.Pandoc (Cm(unCm))
@@ -19,10 +20,30 @@ import Text.Pandoc.Builder (Blocks)
 
 type St = (PandocRenderConfig, Blocks)
 
+data Arg =
+    Help
+    | RespectSoftBreaks Bool
+    | WrapLines Bool
+    deriving (Eq, Show)
+
+options :: [OptDescr Arg]
+options =
+    [ Option "h" ["help"] (NoArg Help)
+      "Show this help"
+    , Option "s" ["soft-breaks"] (NoArg $ RespectSoftBreaks True)
+      "Respect soft line breaks"
+    , Option "S" ["ignore-soft-breaks"] (NoArg $ RespectSoftBreaks False)
+      "Ignore soft line breaks"
+    , Option "w" ["wrap-long-lines"] (NoArg $ WrapLines True)
+      "Respect soft line breaks"
+    , Option "W" ["preserve-long-lines"] (NoArg $ WrapLines False)
+      "Ignore soft line breaks"
+    ]
+
 showHelp :: IO ()
 showHelp = do
     pn <- getProgName
-    putStrLn $ "Usage: " ++ pn ++ " <input.md> [syntax XML directory]"
+    putStrLn $ usageInfo ("Usage: " ++ pn ++ " <input.md> [syntax XML directory]") options
 
 theme :: AttrMap
 theme =
@@ -73,11 +94,28 @@ app =
         , appAttrMap = const theme
         }
 
+updateConfigFromArg :: Arg -> PandocRenderConfig -> PandocRenderConfig
+updateConfigFromArg Help c =
+    c
+updateConfigFromArg (RespectSoftBreaks val) c =
+    c { respectSoftLineBreaks = val }
+updateConfigFromArg (WrapLines val) c =
+    c { wrapLongLines = val }
+
 main :: IO ()
 main = do
     args <- getArgs
+    let (parsedArgs, positional, errs) = getOpt Permute options args
 
-    (mdPath, mSyntaxPath) <- case args of
+    when (not $ null errs) $ do
+        mapM_ putStrLn errs
+        exitFailure
+
+    when (Help `elem` parsedArgs) $ do
+        showHelp
+        exitFailure
+
+    (mdPath, mSyntaxPath) <- case positional of
         [p] -> return (p, Nothing)
         [p, s] -> return (p, Just s)
         _ -> showHelp >> exitFailure
@@ -92,10 +130,12 @@ main = do
                 Left _ -> return Nothing
                 Right m -> return $ Just m
 
-    let renderConfig = PandocRenderConfig { respectSoftLineBreaks = False
-                                          , wrapLongLines = True
-                                          , codeSyntaxMap = sMap
-                                          }
+    let defaultRenderConfig =
+            PandocRenderConfig { respectSoftLineBreaks = True
+                               , wrapLongLines = False
+                               , codeSyntaxMap = sMap
+                               }
+        renderConfig = foldr updateConfigFromArg defaultRenderConfig parsedArgs
 
     case commonmark mdPath contents of
         Left e -> do
