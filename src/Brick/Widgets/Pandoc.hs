@@ -14,6 +14,7 @@ module Brick.Widgets.Pandoc
   , pandocCodeBlockAttr
   , pandocHeaderAttr
   , pandocLinkAttr
+  , pandocBlockQuoteAttr
   )
 where
 
@@ -72,6 +73,9 @@ pandocHeaderAttr = pandocAttr <> "header"
 pandocLinkAttr :: AttrName
 pandocLinkAttr = pandocAttr <> "link"
 
+pandocBlockQuoteAttr :: AttrName
+pandocBlockQuoteAttr = pandocAttr <> "blockQuote"
+
 -------------------------------------------------
 
 type M a = Reader PandocRenderConfig a
@@ -107,7 +111,7 @@ renderBlock (P.CodeBlock _attr body) =
 renderBlock (P.RawBlock fmt body) =
     return $ txt "TODO: raw block"
 renderBlock (P.BlockQuote bs) =
-    return $ txt "TODO: block quote"
+    (padLeft (Pad 4) . withDefAttr pandocBlockQuoteAttr) <$> renderBlocks bs
 renderBlock (P.OrderedList attrs bss) =
     return $ txt "TODO: ordered list"
 renderBlock (P.BulletList bss) =
