@@ -22,7 +22,7 @@ type St = (PandocRenderConfig, Blocks)
 showHelp :: IO ()
 showHelp = do
     pn <- getProgName
-    putStrLn $ "Usage: " ++ pn ++ " <input.md>"
+    putStrLn $ "Usage: " ++ pn ++ " <input.md> [syntax XML directory]"
 
 theme :: AttrMap
 theme =
@@ -77,20 +77,27 @@ main :: IO ()
 main = do
     args <- getArgs
 
-    path <- case args of
-        [p] -> return p
+    (mdPath, mSyntaxPath) <- case args of
+        [p] -> return (p, Nothing)
+        [p, s] -> return (p, Just s)
         _ -> showHelp >> exitFailure
 
-    contents <- T.readFile path
+    contents <- T.readFile mdPath
 
-    Right m <- loadSyntaxesFromDir "../matterhorn/syntax"
+    sMap <- case mSyntaxPath of
+        Nothing -> return Nothing
+        Just path -> do
+            result <- loadSyntaxesFromDir path
+            case result of
+                Left _ -> return Nothing
+                Right m -> return $ Just m
 
     let renderConfig = PandocRenderConfig { respectSoftLineBreaks = False
                                           , wrapLongLines = True
-                                          , codeSyntaxMap = Just m
+                                          , codeSyntaxMap = sMap
                                           }
 
-    case commonmark path contents of
+    case commonmark mdPath contents of
         Left e -> do
             print e
             exitFailure
