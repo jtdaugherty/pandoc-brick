@@ -127,7 +127,10 @@ main = do
         Just path -> do
             result <- loadSyntaxesFromDir path
             case result of
-                Left _ -> return Nothing
+                Left e -> do
+                    putStrLn $ "Warning: could not load syntax XML files from " <> path
+                    print e
+                    return Nothing
                 Right m -> return $ Just m
 
     let defaultRenderConfig =
