@@ -20,6 +20,11 @@ where
 
 import Brick
 import Brick.Widgets.Border
+import Brick.Widgets.Skylighting (highlight)
+import qualified Data.Map as M
+import Data.Maybe (isNothing)
+import Skylighting.Core (lookupSyntax)
+import Skylighting.Types (SyntaxMap)
 import Control.Monad.Reader
 import Data.List (splitAt)
 import qualified Data.Text as T
@@ -34,6 +39,8 @@ data PandocRenderConfig =
                        -- be converted to spaces.
                        , wrapLongLines :: Bool
                        -- ^ Whether to wrap long lines and headers.
+                       , codeSyntaxMap :: Maybe SyntaxMap
+                       -- ^ The syntax map to use to render code blocks.
                        }
     deriving (Show, Read, Eq)
 
@@ -41,6 +48,7 @@ defaultPandocRenderConfig :: PandocRenderConfig
 defaultPandocRenderConfig =
     PandocRenderConfig { respectSoftLineBreaks = False
                        , wrapLongLines = False
+                       , codeSyntaxMap = Nothing
                        }
 
 -------------------------------------------------
@@ -106,8 +114,16 @@ renderBlock (P.Para is) = do
     renderInlinesM is
 renderBlock (P.LineBlock iss) =
     return $ txt "TODO: line block"
-renderBlock (P.CodeBlock _attr body) =
-    return $ withDefAttr pandocCodeBlockAttr $ txt body
+renderBlock (P.CodeBlock (_, classes, _) body) = do
+    m <- asks codeSyntaxMap
+    let fallback = return $ withDefAttr pandocCodeBlockAttr $ txt body
+    if null classes
+       then fallback
+       else case m of
+           Nothing -> fallback
+           Just sMap -> case lookupSyntax (head classes) sMap of
+               Nothing -> fallback
+               Just syntax -> return $ highlight syntax body
 renderBlock (P.RawBlock fmt body) =
     return $ txt "TODO: raw block"
 renderBlock (P.BlockQuote bs) =

@@ -3,8 +3,11 @@ module Main where
 
 import Brick
 import Brick.Widgets.Pandoc
+import Brick.Widgets.Skylighting (attrMappingsForStyle)
 import Control.Monad (void)
 import Control.Monad.Trans (liftIO)
+import Skylighting.Styles (pygments)
+import Skylighting.Loader (loadSyntaxesFromDir)
 import qualified Data.Text.IO as T
 import qualified Graphics.Vty as V
 import System.Exit (exitFailure)
@@ -14,6 +17,8 @@ import Commonmark (commonmark)
 import Commonmark.Pandoc (Cm(unCm))
 import Text.Pandoc.Builder (Blocks)
 
+type St = (PandocRenderConfig, Blocks)
+
 showHelp :: IO ()
 showHelp = do
     pn <- getProgName
@@ -21,7 +26,7 @@ showHelp = do
 
 theme :: AttrMap
 theme =
-    attrMap V.defAttr
+    attrMap V.defAttr $
     [ (pandocEmphAttr,       fg V.white)
     , (pandocUnderlineAttr,  V.defAttr `V.withStyle` V.underline)
     , (pandocStrongAttr,     V.defAttr `V.withStyle` V.bold)
@@ -31,16 +36,10 @@ theme =
     , (pandocHeaderAttr,     fg V.white `V.withStyle` V.bold `V.withStyle` V.underline)
     , (pandocLinkAttr,       fg V.yellow)
     , (pandocBlockQuoteAttr, fg V.cyan)
-    ]
+    ] <> attrMappingsForStyle pygments
 
-renderConfig :: PandocRenderConfig
-renderConfig =
-    PandocRenderConfig { respectSoftLineBreaks = False
-                       , wrapLongLines = True
-                       }
-
-draw :: Blocks -> [Widget ()]
-draw bs =
+draw :: St -> [Widget ()]
+draw (renderConfig, bs) =
     [viewport () Vertical $ cached () $ renderPandoc renderConfig bs]
 
 handleEvent :: s -> BrickEvent () e -> EventM () (Next s)
@@ -63,7 +62,7 @@ handleEvent s (VtyEvent e) = do
         _ -> continue s
 handleEvent s _ = continue s
 
-app :: App Blocks e ()
+app :: App St e ()
 app =
     App { appDraw = draw
         , appChooseCursor = showFirstCursor
@@ -82,9 +81,16 @@ main = do
 
     contents <- T.readFile path
 
+    Right m <- loadSyntaxesFromDir "../matterhorn/syntax"
+
+    let renderConfig = PandocRenderConfig { respectSoftLineBreaks = False
+                                          , wrapLongLines = True
+                                          , codeSyntaxMap = Just m
+                                          }
+
     case commonmark path contents of
         Left e -> do
             print e
             exitFailure
         Right (cm::Cm () Blocks) ->
-            void $ defaultMain app (unCm cm)
+            void $ defaultMain app (renderConfig, unCm cm)

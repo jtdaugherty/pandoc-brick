@@ -23,6 +23,9 @@ library
     default-language: Haskell2010
     build-depends:    base >= 4.14.1.0
                     , brick
+                    , brick-skylighting
+                    , skylighting-core
+                    , containers
                     , text
                     , mtl
                     , pandoc-types
@@ -38,6 +41,8 @@ executable pandoc-brick-demo
                     , mtl
                     , vty
                     , brick
+                    , brick-skylighting
                     , text
                     , commonmark
                     , commonmark-pandoc
+                    , skylighting-core
