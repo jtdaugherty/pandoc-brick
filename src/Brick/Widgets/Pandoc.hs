@@ -11,7 +11,7 @@ module Brick.Widgets.Pandoc
   , pandocStrongAttr
   , pandocStrikeoutAttr
   , pandocInlineCodeAttr
-  , pandocCodeBlockAttr
+  , pandocRawCodeBlockAttr
   , pandocHeaderAttr
   , pandocLinkAttr
   , pandocBlockQuoteAttr
@@ -72,8 +72,8 @@ pandocStrikeoutAttr = pandocAttr <> "strikeout"
 pandocInlineCodeAttr :: AttrName
 pandocInlineCodeAttr = pandocAttr <> "inlineCode"
 
-pandocCodeBlockAttr :: AttrName
-pandocCodeBlockAttr = pandocAttr <> "codeBlock"
+pandocRawCodeBlockAttr :: AttrName
+pandocRawCodeBlockAttr = pandocAttr <> "rawCodeBlock"
 
 pandocHeaderAttr :: AttrName
 pandocHeaderAttr = pandocAttr <> "header"
@@ -116,7 +116,7 @@ renderBlock (P.LineBlock iss) =
     return $ txt "TODO: line block"
 renderBlock (P.CodeBlock (_, classes, _) body) = do
     m <- asks codeSyntaxMap
-    let fallback = return $ withDefAttr pandocCodeBlockAttr $ txt body
+    let fallback = return $ withDefAttr pandocRawCodeBlockAttr $ txt body
     if null classes
        then fallback
        else case m of

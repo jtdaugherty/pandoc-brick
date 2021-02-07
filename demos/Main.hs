@@ -27,15 +27,15 @@ showHelp = do
 theme :: AttrMap
 theme =
     attrMap V.defAttr $
-    [ (pandocEmphAttr,       fg V.white)
-    , (pandocUnderlineAttr,  V.defAttr `V.withStyle` V.underline)
-    , (pandocStrongAttr,     V.defAttr `V.withStyle` V.bold)
-    , (pandocStrikeoutAttr,  V.defAttr `V.withStyle` V.strikethrough)
-    , (pandocInlineCodeAttr, fg V.magenta)
-    , (pandocCodeBlockAttr,  fg V.magenta)
-    , (pandocHeaderAttr,     fg V.white `V.withStyle` V.bold `V.withStyle` V.underline)
-    , (pandocLinkAttr,       fg V.yellow)
-    , (pandocBlockQuoteAttr, fg V.cyan)
+    [ (pandocEmphAttr,          fg V.white)
+    , (pandocUnderlineAttr,     V.defAttr `V.withStyle` V.underline)
+    , (pandocStrongAttr,        V.defAttr `V.withStyle` V.bold)
+    , (pandocStrikeoutAttr,     V.defAttr `V.withStyle` V.strikethrough)
+    , (pandocInlineCodeAttr,    fg V.magenta)
+    , (pandocRawCodeBlockAttr,  fg V.magenta)
+    , (pandocHeaderAttr,        fg V.white `V.withStyle` V.bold `V.withStyle` V.underline)
+    , (pandocLinkAttr,          fg V.yellow)
+    , (pandocBlockQuoteAttr,    fg V.cyan)
     ] <> attrMappingsForStyle pygments
 
 draw :: St -> [Widget ()]
