@@ -137,9 +137,11 @@ main = do
                                }
         renderConfig = foldr updateConfigFromArg defaultRenderConfig parsedArgs
 
-    case commonmark mdPath contents of
+    blocks <- case commonmark mdPath contents of
         Left e -> do
             print e
             exitFailure
         Right (cm::Cm () Blocks) ->
-            void $ defaultMain app (renderConfig, unCm cm)
+            return $ unCm cm
+
+    void $ defaultMain app (renderConfig, blocks)
