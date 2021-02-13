@@ -284,9 +284,16 @@ isLineBreak P.SoftBreak = True
 isLineBreak _ = False
 
 inlineWidth :: P.Inline -> Int
-inlineWidth P.Space                      = 1
+-- I'm not sure how these should be visually represented, so for now I'm
+-- not going to bother to compute the width.
+inlineWidth (P.Cite _ _)                 = 0
+-- It's weird to compute the width of a block sequence, so I am not
+-- going to bother. I am not yet sure how/when this kind of node would
+-- even get created.
+inlineWidth (P.Note _)                   = 0
 inlineWidth P.SoftBreak                  = 0
 inlineWidth P.LineBreak                  = 0
+inlineWidth P.Space                      = 1
 inlineWidth (P.Code _ t)                 = textWidth t
 inlineWidth (P.Math _ t)                 = textWidth t
 inlineWidth (P.RawInline (P.Format f) t) = textWidth f + 3 + textWidth t
@@ -304,10 +311,3 @@ inlineWidth (P.Subscript is)             = 2 + (sum $ inlineWidth <$> is)
 inlineWidth (P.SmallCaps is)             = sum $ inlineWidth <$> is
 inlineWidth (P.Quoted _ is)              = 2 + (sum $ inlineWidth <$> is)
 inlineWidth (P.Span _ is)                = sum $ inlineWidth <$> is
--- I'm not sure how these should be visually represented, so for now I'm
--- not going to bother to compute the width.
-inlineWidth (P.Cite _ _)                 = 0
--- It's weird to compute the width of a block sequence, so I am not
--- going to bother. I am not yet sure how/when this kind of node would
--- even get created.
-inlineWidth (P.Note _)                   = 0
