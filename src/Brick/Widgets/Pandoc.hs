@@ -216,7 +216,9 @@ renderInline (P.Image _attr _ (url, label)) =
     withDefAttr pandocLinkAttr $
     hyperlink url $
     txt $
-    if T.null label then url else label
+    "[Image:" <>
+    (if T.null label then url else label) <>
+    "]"
 renderInline (P.Span _attr is) =
     renderInlines False False is
 renderInline (P.Cite citations is) =
@@ -290,9 +292,9 @@ inlineWidth (P.Math _ t)                 = textWidth t
 inlineWidth (P.RawInline (P.Format f) t) = textWidth f + 3 + textWidth t
 inlineWidth (P.Str t)                    = textWidth t
 inlineWidth (P.Link _ _ (url, ""))       = textWidth url
-inlineWidth (P.Image _ _ (url, ""))      = textWidth url
 inlineWidth (P.Link _ _ (_, title))      = textWidth title
-inlineWidth (P.Image _ _ (_, title)  )   = textWidth title
+inlineWidth (P.Image _ _ (url, ""))      = 9 + textWidth url
+inlineWidth (P.Image _ _ (_, title)  )   = 9 + textWidth title
 inlineWidth (P.Emph is)                  = sum $ inlineWidth <$> is
 inlineWidth (P.Underline is)             = sum $ inlineWidth <$> is
 inlineWidth (P.Strong is)                = sum $ inlineWidth <$> is
